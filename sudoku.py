@@ -1,6 +1,9 @@
 # import pygame library
 import pygame
- 
+from utils.audio_recorder import AudioRecorder
+import tensorflow as tf
+from utils.spectrogram_generator import SpectrogramGenerator
+
 # initialise the pygame font
 pygame.font.init()
  
@@ -145,14 +148,28 @@ def instruction():
 def result():
     text1 = font1.render("FINISHED PRESS R or D", 1, (0, 0, 0))
     screen.blit(text1, (20, 570))    
+    
+def execute_speech_command(command):
+    print(command)
+    if command == "left":
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT))
+    if command == "up":
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP))
+    if command == "right":
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT))
+    if command == "down":
+       pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+
 run = True
-flag1 = 0
+flag1 = 1
 flag2 = 0
 rs = 0
 error = 0
+recorder = AudioRecorder()
+specgen = SpectrogramGenerator()
+
 # The loop thats keep the window running
 while run:
-     
     # White color background
     screen.fill((255, 255, 255))
     # Loop through the events stored in event.get()
@@ -253,13 +270,27 @@ while run:
         raise_error1()  
     if rs == 1:
         result()        
-    draw()  
+    draw()   
     if flag1 == 1:
         draw_box()       
     instruction()    
  
     # Update window
-    pygame.display.update()  
+    pygame.display.update()
+    recorder.record_audio_continuous()
+    sound = 'recorded_input/recording.wav'
+    sound = tf.io.read_file(str(sound))
+    sound, sample_rate = tf.audio.decode_wav(sound, desired_channels=1, desired_samples=16000,)
+    sound = tf.squeeze(sound, axis=-1)
+    waveform = sound
+    sound = specgen.get_spectrogram(sound)
+    sound = sound[tf.newaxis,...]
+
+    imported = tf.saved_model.load("saved_model")
+    results = imported(waveform[tf.newaxis, :])
+    command = results['class_names'].numpy()[0].decode('utf-8')
+    print("Command:", command)
+    execute_speech_command(command)
  
 # Quit pygame window    
 pygame.quit()     
