@@ -1,1 +1,1 @@
-readme
+Este é um repositório voltado ao trabalho final da disciplina de processamento de voz da UFRJ e apresenta um sistema simples para captação e classificação de comandos de voz para controle de um jogo de sudoku.
