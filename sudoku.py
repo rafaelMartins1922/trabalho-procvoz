@@ -181,8 +181,7 @@ while run:
         if event.type == pygame.MOUSEBUTTONDOWN:
             flag1 = 1
             pos = pygame.mouse.get_pos()
-            get_cord(pos)
-        # Get the number to be inserted if key pressed    
+            get_cord(pos)  
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 x-= 1
@@ -277,14 +276,13 @@ while run:
  
     # Update window
     pygame.display.update()
+    
     recorder.record_audio_continuous()
     sound = 'recorded_input/recording.wav'
     sound = tf.io.read_file(str(sound))
     sound, sample_rate = tf.audio.decode_wav(sound, desired_channels=1, desired_samples=16000,)
     sound = tf.squeeze(sound, axis=-1)
     waveform = sound
-    sound = specgen.get_spectrogram(sound)
-    sound = sound[tf.newaxis,...]
 
     imported = tf.saved_model.load("saved_model")
     results = imported(waveform[tf.newaxis, :])
